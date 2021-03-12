@@ -1,27 +1,17 @@
 
 const fs = require("fs");
 const request = require("request");
+const util = require('util');
+const get = util.promisify(request.get);
+
+const execute = async (url, dest) => {
+    console.log(`--output ${dest.replace(`${process.cwd()}\\`, "")}\n--compressed ${url}`);
+    // download
+    const res = await get({ url, encoding: 'binary', gzip: true });
+    // to file
+    fs.writeFileSync(dest, res.body, "binary");
+};
 
 module.exports = {
-    execute: async (url, dest) => {
-        let download = (url, filename, resolve, reject) => {
-            request.get({ uri: url, encoding: 'binary', gzip: true }, function (err, res) {
-                if (!err) {
-                    fs.writeFile(filename, res.body, "binary", function (err, res) {
-                        if (!err) {
-                            resolve && resolve();
-                        } else {
-                            reject && reject(err);
-                        }
-                    })
-                } else {
-                    reject && reject(err);
-                }
-            })
-        }
-
-        return await new Promise((resolve, reject) => {
-            download(url, dest, resolve, reject)
-        });
-    }
+    execute
 }
